@@ -2,8 +2,6 @@ from PIL import Image, ImageOps
 from io import BytesIO
 import cv2
 import numpy as np
-import torch
-from torchvision import transforms
 from pathlib import Path
 from app.effects.oil_onnx import apply_oil_onnx
 
