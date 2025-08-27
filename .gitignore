@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.log
+
+# Virtual env
+env/
+venv/
+.venv/
+.env
+.env.*
+
+# Alembic version history (можешь оставить миграции, но исключить кэш)
+alembic/versions/__pycache__/
+alembic/versions/*.pyc
+
+# Docker
+*.pid
+dockerized_app/__pycache__/
+
+# VSCode, PyCharm и IDE-шные
+.idea/
+.vscode/
+
+storage/uploads/
+storage/results/
+storage/tmp/
