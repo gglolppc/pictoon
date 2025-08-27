@@ -10,7 +10,7 @@ from app.utils.limiter import limiter
 router = APIRouter()
 
 @router.post("")
-@limiter.limit("5/minute")
+@limiter.limit("20/minute")
 async def upload_image(request: Request, style: str, file: UploadFile = File(...)):
     # 1) стиль валиден? (пока просто проверим тройку допустимых)
     if style not in {"comic", "oil", "retro"}:
