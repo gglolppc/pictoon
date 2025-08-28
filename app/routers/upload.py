@@ -6,37 +6,49 @@ from app.config import settings
 from app.paths import UPLOADS_DIR, RESULTS_DIR
 from pathlib import Path
 from app.utils.limiter import limiter
+from PIL import Image
+from io import BytesIO
 
 router = APIRouter()
 
 @router.post("")
-@limiter.limit("20/minute")
+@limiter.limit("5/minute")
 async def upload_image(request: Request, style: str, file: UploadFile = File(...)):
-    # 1) стиль валиден? (пока просто проверим тройку допустимых)
     if style not in {"comic", "oil", "retro"}:
         raise HTTPException(400, "Unsupported style")
 
-    # 2) MIME и размер
     if not validate_mime(file.content_type or ""):
         raise HTTPException(415, "Unsupported media type")
 
     raw = await file.read()
     max_bytes = settings.max_upload_mb * 1024 * 1024
-    if len(raw) > max_bytes:
-        raise HTTPException(413, "File too large")
+    max_side = 1024  # Максимальный размер стороны в пикселях
 
-    # 3) normalize EXIF
+    fixed = normalize_exif_orientation(raw)
+
+    # Проверка размеров изображения
     try:
-        fixed = normalize_exif_orientation(raw)
-    except Exception:
+        img = Image.open(BytesIO(fixed)).convert("RGB")  # Конвертация в RGB для WebP
+        width, height = img.size
+        print(f"Original size: {width}x{height} pixels")  # Отладка
+
+        # Если размер файла больше max_bytes или одна из сторон больше max_side
+        if len(raw) > max_bytes or max(width, height) > max_side:
+            print("Resizing image...")  # Отладка
+            img.thumbnail((max_side, max_side))  # Уменьшаем до max_side
+            buf = BytesIO()
+            img.save(buf, format="JPEG", quality=95)
+            fixed = buf.getvalue()
+            print(f"Resized size: {len(fixed)} bytes")  # Отладка
+    except Exception as e:
+        print(f"Resize error: {e}")  # Отладка
         raise HTTPException(400, "Corrupted or unsupported image")
 
-    # 4) сохраняем безопасно
+    # Сохраняем
     uid = new_id()
     src = (UPLOADS_DIR / f"{uid}.jpg").resolve()
     src.write_bytes(fixed)
     dst = (RESULTS_DIR / f"{uid}.jpg").resolve()
-    # защитимся от path traversal (resolve + проверка родителей)
     if UPLOADS_DIR not in src.parents:
         raise HTTPException(400, "Invalid path")
 
@@ -46,6 +58,3 @@ async def upload_image(request: Request, style: str, file: UploadFile = File(...
         raise HTTPException(500, f"Processing failed: {e}")
 
     return {"id": uid, "result_url": f"/result/{uid}"}
-
-from fastapi.responses import FileResponse
-from app.paths import RESULTS_DIR

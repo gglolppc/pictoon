@@ -1,5 +1,5 @@
 // База API: тот же домен (nginx проксирует /upload и /result к FastAPI)
-const API_BASE = window.location.origin;
+const API_BASE = "http://127.0.0.1:8000";
 
 const dropzone = document.getElementById("dropzone");
 const fileInput = document.getElementById("fileInput");
