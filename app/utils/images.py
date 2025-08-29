@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 from pathlib import Path
 from app.effects.oil_onnx import apply_oil_onnx
+from app.effects.animegan2_onnx import apply_shinkai
 
 def apply_comic(img: np.ndarray) -> np.ndarray:
     # 1. Уменьшаем шум
@@ -25,59 +26,6 @@ def apply_comic(img: np.ndarray) -> np.ndarray:
     cartoon = cv2.bitwise_and(quantized, edges)
     return cartoon
 
-# def apply_comic(img_rgb: np.ndarray, k_colors: int = 8,
-#                          edge_sigma: float = 0.8, edge_k: float = 1.6,
-#                          edge_eps: float = -0.015, edge_phi: float = 10.0,
-#                          edge_thick: int = 1) -> np.ndarray:
-#     """
-#     k_colors  — сколько цветов оставить (6–10)
-#     edge_*    — параметры xDoG (сильно влияют на «чернильность»)
-#     edge_thick— утолщение контура морфологией
-#     """
-#     # --- шумопонижение с сохранением границ ---
-#     base = cv2.bilateralFilter(img_rgb, d=9, sigmaColor=75, sigmaSpace=75)
-#
-#     # --- постеризация в LAB (кожа выглядит лучше) ---
-#     lab = cv2.cvtColor(base, cv2.COLOR_RGB2LAB)
-#     L, A, B = cv2.split(lab)
-#
-#     def quantize_ch(ch, K):
-#         Z = ch.reshape(-1, 1).astype(np.float32)
-#         _, labels, centers = cv2.kmeans(
-#             Z, K, None,
-#             (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 0.5),
-#             5, cv2.KMEANS_PP_CENTERS
-#         )
-#         q = centers[labels.flatten()].reshape(ch.shape).astype(np.uint8)
-#         return q
-#
-#     # меньше квантов для света, больше для цвета
-#     Lq = quantize_ch(L, max(4, k_colors // 2))
-#     Aq = quantize_ch(A, k_colors)
-#     Bq = quantize_ch(B, k_colors)
-#
-#     lab_q = cv2.merge([Lq, Aq, Bq])
-#     toon = cv2.cvtColor(lab_q, cv2.COLOR_LAB2RGB)
-#
-#     # --- xDoG-контуры (красиво и «чернильно») ---
-#     gray = cv2.cvtColor(base, cv2.COLOR_RGB2GRAY).astype(np.float32) / 255.0
-#     g1 = cv2.GaussianBlur(gray, (0, 0), edge_sigma)
-#     g2 = cv2.GaussianBlur(gray, (0, 0), edge_sigma * edge_k)
-#     xdog = g1 - g2 - edge_eps
-#     xdog = np.tanh(edge_phi * xdog)  # [-1..1]
-#     edges = (xdog < 0).astype(np.uint8) * 255  # чёрные линии
-#
-#     if edge_thick > 0:
-#         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (edge_thick, edge_thick))
-#         edges = cv2.dilate(edges, kernel, iterations=1)
-#
-#     edges_rgb = cv2.cvtColor(edges, cv2.COLOR_GRAY2RGB)
-#
-#     # --- слияние: мягкая умножающая маска ---
-#     toon32 = toon.astype(np.uint16)
-#     ink32  = (255 - edges_rgb).astype(np.uint16)
-#     out = ((toon32 * ink32) // 255).astype(np.uint8)  # multiply
-#     return out
 
 
 
@@ -125,6 +73,8 @@ def process_image(uid: str, style: str, src_path: Path, dst_path: Path):
         out = apply_retro(img)
     elif style == "oil":
         out = apply_oil_onnx(img)
+    elif style == "anime":
+        out = apply_shinkai(img)
     else:
         raise ValueError("Unsupported style")
 

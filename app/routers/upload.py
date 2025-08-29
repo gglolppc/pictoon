@@ -12,9 +12,9 @@ from io import BytesIO
 router = APIRouter()
 
 @router.post("")
-@limiter.limit("5/minute")
+@limiter.limit("25/minute")
 async def upload_image(request: Request, style: str, file: UploadFile = File(...)):
-    if style not in {"comic", "oil", "retro"}:
+    if style not in {"comic", "oil", "retro", "anime"}:
         raise HTTPException(400, "Unsupported style")
 
     if not validate_mime(file.content_type or ""):
@@ -22,7 +22,7 @@ async def upload_image(request: Request, style: str, file: UploadFile = File(...
 
     raw = await file.read()
     max_bytes = settings.max_upload_mb * 1024 * 1024
-    max_side = 700  # Максимальный размер стороны в пикселях
+    max_side = 512  # Максимальный размер стороны в пикселях
 
     fixed = normalize_exif_orientation(raw)
 

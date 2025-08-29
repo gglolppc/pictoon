@@ -31,10 +31,13 @@
     /* запуск анимации */
     .btn-flash.is-anim::after{
       animation: styleFlash 550ms ease-out forwards;
+    .fade-in { animation: fadeIn .25s ease-out forwards; }
+     @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
     }
   </style>
 
 </head>
+
 <body class="min-h-screen bg-slate-50 text-slate-900">
 
   <!-- Header -->
@@ -61,11 +64,10 @@
             class="style-pill btn-flash group rounded-2xl p-3 text-left
                    bg-gradient-to-br from-yellow-400 via-fuchsia-500 to-rose-500
          text-white shadow-sm transition-all duration-200 hover:scale-105">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center justify-center gap-2">
               <span class="text-xl">🖊️</span>
               <div>
                 <div class="text-sm font-semibold">Comic</div>
-                <div class="text-[11px] opacity-90">контуры + постеризация</div>
               </div>
             </div>
           </button>
@@ -75,12 +77,9 @@
               class="style-pill btn-flash group rounded-2xl p-3 text-left
                      bg-gradient-to-br from-yellow-400 via-fuchsia-500 to-rose-500
                      text-white shadow-sm transition-all duration-200 hover:scale-105">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center justify-center gap-2">
               <span class="text-xl">📼</span>
-              <div>
-                <div class="text-sm font-semibold">Retro</div>
-                <div class="text-[11px] opacity-90">сепия + виньетка</div>
-              </div>
+              <div class="text-sm font-semibold">Retro/Sepia</div>
             </div>
           </button>
 
@@ -89,11 +88,21 @@
             class="style-pill btn-flash group rounded-2xl p-3 text-left
                    bg-gradient-to-br from-yellow-400 via-fuchsia-500 to-rose-500
                    text-white shadow-sm transition-all duration-200 hover:scale-105">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center justify-center gap-2">
               <span class="text-xl">🎨</span>
               <div>
                 <div class="text-sm font-semibold">Oil</div>
-                <div class="text-[11px] opacity-90">быстрый neural-style</div>
+              </div>
+            </div>
+          </button>
+          <button type="button" data-style="anime"
+            class="style-pill btn-flash group rounded-2xl p-3 text-left
+                   bg-gradient-to-br from-yellow-400 via-fuchsia-500 to-rose-500
+                   text-white shadow-sm transition-all duration-200 hover:scale-105">
+            <div class="flex items-center justify-center gap-2">
+              <span class="text-xl">🎨</span>
+              <div>
+                <div class="text-sm font-semibold">Anime</div>
               </div>
             </div>
           </button>
@@ -132,16 +141,11 @@
 
         <div class="grid gap-4">
           <div>
-            <p class="mb-1 text-xs text-slate-500">Selected image</p>
+            <p class="mb-1 text-xs text-slate-500">UPLOAD AN IMAGE</p>
             <img id="preview" class="hidden w-full rounded-lg border border-slate-200" alt="preview" />
-            <div id="noPreview" class="text-xs text-slate-400">No image selected</div>
           </div>
 
-          <div>
-            <p class="mb-1 text-xs text-slate-500">Result</p>
-            <img id="resultImg" class="hidden w-full rounded-lg border border-slate-200" alt="result" />
-            <div id="resultEmpty" class="text-xs text-slate-400">Nothing yet</div>
-          </div>
+
 
           <div class="flex flex-wrap gap-2">
             <a id="downloadBtn"

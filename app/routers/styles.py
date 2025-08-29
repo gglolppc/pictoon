@@ -5,6 +5,7 @@ STYLES = [
     {"key": "comic", "name": "Comic"},
     {"key": "oil", "name": "Oil Painting"},
     {"key": "retro", "name": "Retro Film"},
+    {"key": "anime", "name": "anime"},
 ]
 
 @router.get("")

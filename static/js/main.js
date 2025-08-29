@@ -5,8 +5,11 @@ const dropzone = document.getElementById("dropzone");
 const fileInput = document.getElementById("fileInput");
 const preview = document.getElementById("preview");
 const noPreview = document.getElementById("noPreview");
+
+// эти два не используем для показа (оставлены как есть, без удаления)
 const resultImg = document.getElementById("resultImg");
 const resultEmpty = document.getElementById("resultEmpty");
+
 const processBtn = document.getElementById("processBtn");
 const statusEl = document.getElementById("status");
 const downloadBtn = document.getElementById("downloadBtn");
@@ -21,30 +24,23 @@ const styleButtons = stylePicker.querySelectorAll("[data-style]");
 
 // отметить активный
 function activate(btn) {
-  styleButtons.forEach(b => {
-    b.classList.remove(
-      "scale-105",
-      "shadow-xl","shadow-black","is-anim"
-    );
-    b.setAttribute("aria-pressed","false");
+  styleButtons.forEach((b) => {
+    b.classList.remove("scale-105", "shadow-xl", "shadow-black", "is-anim");
+    b.setAttribute("aria-pressed", "false");
   });
 
-  btn.classList.add(
-    "scale-105",
-    "shadow-xl","shadow-black"
-  );
-  btn.setAttribute("aria-pressed","true");
+  btn.classList.add("scale-105", "shadow-xl", "shadow-black");
+  btn.setAttribute("aria-pressed", "true");
 
-  // перезапуск анимации вспышки
+  // перезапуск анимации вспышки на кнопке
   btn.classList.remove("is-anim");
-  void btn.offsetWidth;          // force reflow, чтобы анимация стартовала заново
+  void btn.offsetWidth;
   btn.classList.add("is-anim");
 }
 
-
-styleButtons.forEach(btn => {
+styleButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
-    styleInput.value = btn.dataset.style;   // совместимо с остальным кодом
+    styleInput.value = btn.dataset.style; // совместимо с остальным кодом
     activate(btn);
   });
 });
@@ -52,14 +48,18 @@ styleButtons.forEach(btn => {
 // по умолчанию — comic
 activate(styleButtons[0]);
 
-
 function setStatus(msg) {
   statusEl.textContent = msg || "";
 }
 
 function showPreview(file) {
   const url = URL.createObjectURL(file);
+  // лёгкий fade-in и для локального превью
+  preview.classList.remove("fade-in");
+  void preview.offsetWidth;
   preview.src = url;
+  preview.classList.add("fade-in");
+
   preview.classList.remove("hidden");
   noPreview.classList.add("hidden");
 }
@@ -69,7 +69,9 @@ dropzone.addEventListener("dragover", (e) => {
   e.preventDefault();
   dropzone.classList.add("border-indigo-500");
 });
-dropzone.addEventListener("dragleave", () => dropzone.classList.remove("border-indigo-500"));
+dropzone.addEventListener("dragleave", () =>
+  dropzone.classList.remove("border-indigo-500")
+);
 dropzone.addEventListener("drop", (e) => {
   e.preventDefault();
   dropzone.classList.remove("border-indigo-500");
@@ -108,10 +110,13 @@ async function processImage() {
   setStatus("Processing…");
 
   try {
-    const res = await fetch(`${API_BASE}/upload?style=${encodeURIComponent(style)}`, {
-      method: "POST",
-      body: form,
-    });
+    const res = await fetch(
+      `${API_BASE}/upload?style=${encodeURIComponent(style)}`,
+      {
+        method: "POST",
+        body: form,
+      }
+    );
     if (!res.ok) {
       const text = await res.text();
       throw new Error(text || `HTTP ${res.status}`);
@@ -119,10 +124,13 @@ async function processImage() {
     const data = await res.json();
     const resultUrl = `${API_BASE}${data.result_url}`; // /result/{uid}
 
-    resultImg.src = `${resultUrl}?t=${Date.now()}`; // cache-bust
-    resultImg.classList.remove("hidden");
-    resultEmpty.classList.add("hidden");
+    // === ПОКАЗ РЕЗУЛЬТАТА ПОВЕРХ ОРИГИНАЛА + FADE-IN ===
+    preview.classList.remove("fade-in");
+    void preview.offsetWidth; // force reflow для перезапуска анимации
+    preview.src = `${resultUrl}?t=${Date.now()}`; // cache-bust
+    preview.classList.add("fade-in");
 
+    // Кнопки "Скачать" и "Copy Link" — как было
     downloadBtn.href = resultUrl;
     downloadBtn.classList.remove("hidden");
     downloadBtn.setAttribute("download", `${data.id}.jpg`);
@@ -133,6 +141,7 @@ async function processImage() {
       copyLinkBtn.textContent = "Copied!";
       setTimeout(() => (copyLinkBtn.textContent = "Copy Link"), 1200);
     };
+
     setStatus("Done");
   } catch (err) {
     console.error(err);
@@ -144,3 +153,11 @@ async function processImage() {
 }
 
 processBtn.addEventListener("click", processImage);
+
+// Лёгкая анимация появления результата — добавляем CSS через JS (чтобы HTML не менять)
+const _style = document.createElement("style");
+_style.textContent = `
+  .fade-in { animation: fadeIn .3s ease-out forwards; }
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+`;
+document.head.appendChild(_style);
