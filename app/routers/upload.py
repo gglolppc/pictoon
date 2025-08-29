@@ -22,7 +22,7 @@ async def upload_image(request: Request, style: str, file: UploadFile = File(...
 
     raw = await file.read()
     max_bytes = settings.max_upload_mb * 1024 * 1024
-    max_side = 1024  # Максимальный размер стороны в пикселях
+    max_side = 700  # Максимальный размер стороны в пикселях
 
     fixed = normalize_exif_orientation(raw)
 
