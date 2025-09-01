@@ -6,6 +6,9 @@ STYLES = [
     {"key": "oil", "name": "Oil Painting"},
     {"key": "retro", "name": "Retro Film"},
     {"key": "anime", "name": "anime"},
+    {"key": "pencil", "name": "Pencil"},
+    {"key": "vhs", "name": "Vhs / Glitch"},
+
 ]
 
 @router.get("")

@@ -26,8 +26,22 @@ def apply_comic(img: np.ndarray) -> np.ndarray:
     cartoon = cv2.bitwise_and(quantized, edges)
     return cartoon
 
+def apply_pencil(img: np.ndarray) -> np.ndarray:
+    # 1. В градации серого
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
+    # 2. Инверсия
+    inv = 255 - gray
 
+    # 3. Размытие
+    blur = cv2.GaussianBlur(inv, (21, 21), sigmaX=0, sigmaY=0)
+
+    # 4. Dodge blend: серый / (255 - размытие)
+    blend = cv2.divide(gray, 255 - blur, scale=256)
+
+    # Вернём обратно в 3 канала RGB
+    pencil = cv2.cvtColor(blend, cv2.COLOR_GRAY2RGB)
+    return pencil
 
 def apply_retro(img: np.ndarray) -> np.ndarray:
     # 1. Sepia фильтр
@@ -46,6 +60,32 @@ def apply_retro(img: np.ndarray) -> np.ndarray:
     for i in range(3):
         vignette[:,:,i] = vignette[:,:,i] * mask
     return vignette
+
+def apply_glitch(img: np.ndarray) -> np.ndarray:
+    h, w = img.shape[:2]
+
+    # --- 1. RGB split ---
+    shift = 5
+    b, g, r = cv2.split(img)
+    M_left = np.float32([[1, 0, -shift], [0, 1, 0]])
+    M_right = np.float32([[1, 0, shift], [0, 1, 0]])
+    r_shifted = cv2.warpAffine(r, M_right, (w, h))
+    b_shifted = cv2.warpAffine(b, M_left, (w, h))
+    img_glitch = cv2.merge([b_shifted, g, r_shifted])
+
+    # --- 2. Horizontal noise lines ---
+    num_lines = 10
+    for _ in range(num_lines):
+        y = np.random.randint(0, h-2)
+        img_glitch[y:y+2, :] = np.roll(img_glitch[y:y+2, :], np.random.randint(-20, 20), axis=1)
+
+    # --- 3. Wave distortion ---
+    out = np.zeros_like(img_glitch)
+    for y in range(h):
+        shift_x = int(5.0 * np.sin(2 * np.pi * y / 60.0))  # волна
+        out[y, :] = np.roll(img_glitch[y, :], shift_x, axis=0)
+
+    return out
 
 
 ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp"}
@@ -75,6 +115,10 @@ def process_image(uid: str, style: str, src_path: Path, dst_path: Path):
         out = apply_oil_onnx(img)
     elif style == "anime":
         out = apply_shinkai(img)
+    elif style == "pencil":
+        out = apply_pencil(img)
+    elif style == "vhs":
+        out = apply_glitch(img)
     else:
         raise ValueError("Unsupported style")
 

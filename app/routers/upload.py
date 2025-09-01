@@ -14,7 +14,7 @@ router = APIRouter()
 @router.post("")
 @limiter.limit("25/minute")
 async def upload_image(request: Request, style: str, file: UploadFile = File(...)):
-    if style not in {"comic", "oil", "retro", "anime"}:
+    if style not in {"comic", "oil", "retro", "anime", "pencil", "vhs"}:
         raise HTTPException(400, "Unsupported style")
 
     if not validate_mime(file.content_type or ""):
